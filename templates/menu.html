@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="padding-top: 6rem; padding-bottom: 4rem;">
+    <h1 style="text-align: center; margin-bottom: 1rem;">Our Menu</h1>
+    <p style="text-align: center; max-width: 600px; margin: 0 auto 3rem;">
+        Freshly pressed at 4:30 AM every morning. No preservatives, no added sugar. Just raw vitality.
+    </p>
+
+    <!-- Daily Starter -->
+    <h2
+        style="margin-bottom: 1.5rem; border-bottom: 2px solid var(--accent); padding-bottom: 0.5rem; display: inline-block;">
+        Daily Starter</h2>
+    <div class="grid"
+        style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 4rem;">
+        {% for p in products if p.type == 'Starter' %}
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <h3 style="font-size: 1.25rem;">{{ p.title }}</h3>
+                <span
+                    style="background: #e0e7ff; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem; font-weight: bold; color: #3730a3;">{{
+                    p.tag }}</span>
+            </div>
+            <p style="margin-bottom: 1.5rem;">{{ p.description }}</p>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: bold; font-size: 1.2rem;">GH₵ {{ "%.2f"|format(p.price) }}</span>
+                <a href="/checkout?product_id={{ p.id }}" class="btn btn-primary"
+                    style="padding: 0.5rem 1rem; text-decoration: none;">
+                    <i data-lucide="shopping-bag" style="margin-right: 0.5rem; width: 18px;"></i> Get It
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Signature Lines -->
+    <h2
+        style="margin-bottom: 1.5rem; border-bottom: 2px solid var(--primary-light); padding-bottom: 0.5rem; display: inline-block;">
+        Signature Lines</h2>
+    <div class="grid"
+        style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 4rem;">
+        {% for p in products if p.type == 'Signature' %}
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <h3 style="font-size: 1.25rem;">{{ p.title }}</h3>
+                <span
+                    style="background: var(--bg-secondary); padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem; font-weight: bold; color: var(--text-muted);">{{
+                    p.tag }}</span>
+            </div>
+            <p style="margin-bottom: 1.5rem;">{{ p.description }}</p>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: bold; font-size: 1.2rem;">GH₵ {{ "%.2f"|format(p.price) }}</span>
+                <a href="/checkout?product_id={{ p.id }}" class="btn btn-primary"
+                    style="padding: 0.5rem 1rem; text-decoration: none;">
+                    <i data-lucide="shopping-bag" style="margin-right: 0.5rem; width: 18px;"></i> Get It
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Functional Blends -->
+    <h2
+        style="margin-bottom: 1.5rem; border-bottom: 2px solid var(--accent); padding-bottom: 0.5rem; display: inline-block;">
+        Functional Blends</h2>
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+        {% for p in products if p.type == 'Functional' %}
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <h3 style="font-size: 1.25rem;">{{ p.title }}</h3>
+                <span
+                    style="background: #fef3c7; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem; font-weight: bold; color: #92400e;">{{
+                    p.tag }}</span>
+            </div>
+            <p style="margin-bottom: 1.5rem;">{{ p.description }}</p>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: bold; font-size: 1.2rem;">GH₵ {{ "%.2f"|format(p.price) }}</span>
+                <a href="/checkout?product_id={{ p.id }}" class="btn btn-primary"
+                    style="padding: 0.5rem 1rem; text-decoration: none;">
+                    <i data-lucide="shopping-bag" style="margin-right: 0.5rem; width: 18px;"></i> Get It
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="padding-top: 5rem;">
+    <!-- Hero -->
+    <section class="container"
+        style="padding: 4rem 1rem; text-align: center; min-height: 80vh; display: flex; flex-direction: column; justify-content: center;">
+        <h1 style="font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 1rem; line-height: 1.1;" data-aos="fade-up">
+            Pressed at dawn. <br />
+            <span style="color: var(--primary);">Delivered by morning.</span>
+        </h1>
+        <p style="font-size: 1.2rem; max-width: 600px; margin: 0 auto 1.5rem; color: var(--text-muted);"
+            data-aos="fade-up" data-aos-delay="100">
+            100% freshly squeezed fruits. No preservatives, no added sugar, no heat processing. Just raw, cold-pressed
+            vitality delivered to your door every morning.
+        </p>
+
+        <div style="margin: 0 auto 2.5rem; display: flex; justify-content: center; width: fit-content;"
+            data-aos="zoom-in" data-aos-delay="200">
+            <div
+                style="animation: pulse-green 2s infinite; background: #ecfdf5; border: 1px solid var(--primary); padding: 0.5rem 1.5rem; border-radius: 50px; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 0.5rem; cursor: default;">
+                <i data-lucide="truck" style="width: 20px;"></i>
+                <span>100% Free Delivery From 6am — 10am</span>
+            </div>
+        </div>
+        <style>
+            @keyframes pulse-green {
+                0% {
+                    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4);
+                    transform: scale(1);
+                }
+
+                70% {
+                    box-shadow: 0 0 0 10px rgba(22, 163, 74, 0);
+                    transform: scale(1.03);
+                }
+
+                100% {
+                    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
+                    transform: scale(1);
+                }
+            }
+
+            @keyframes float {
+                0% {
+                    transform: translateY(0px);
+                }
+
+                50% {
+                    transform: translateY(-10px);
+                }
+
+                100% {
+                    transform: translateY(0px);
+                }
+            }
+
+            .floating-anim {
+                animation: float 3s ease-in-out infinite;
+                display: inline-block;
+            }
+
+            .card {
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+
+            .card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
+        </style>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem; margin-bottom: 3rem;"
+            data-aos="fade-up" data-aos-delay="300">
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <a href="/menu" class="btn btn-primary"
+                    style="padding: 1rem 2rem; font-size: 1.1rem; text-decoration: none;">
+                    Order Now
+                </a>
+                <a href="/subscribe" class="btn"
+                    style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); text-decoration: none;">
+                    Subscribe & Save
+                </a>
+            </div>
+            <a href="javascript:void(0)" onclick="openQuiz()"
+                style="color: var(--text-muted); text-decoration: underline; font-size: 0.9rem;">
+                Not sure? Find your perfect blend ⚡
+            </a>
+        </div>
+
+        <!-- Explainer Video -->
+        <div class="card" style="max-width: 800px; margin: 0 auto 4rem; padding: 0.5rem; overflow: hidden;"
+            data-aos="fade-up" data-aos-offset="200">
+            <div
+                style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 0.5rem;">
+                <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                    src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=0&mute=1" title="How We Juice"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+                </iframe>
+            </div>
+            <p style="font-size: 0.9rem; margin-top: 1rem; color: var(--text-muted);">See how we press your daily bottle
+                at 4:30 AM.</p>
+        </div>
+
+        <!-- Trust Badges -->
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+            <div class="card" style="display: flex; flex-direction: column; align-items: center; text-align: center;"
+                data-aos="fade-up" data-aos-delay="0">
+                <div style="padding: 1rem; border-radius: 50%; background: #fef3c7; margin-bottom: 1rem;">
+                    <i data-lucide="clock" style="color: var(--accent); width: 32px; height: 32px;"></i>
+                </div>
+                <h3>Save Time</h3>
+                <p>No shopping or juicing. We do the work while you sleep.</p>
+            </div>
+            <div class="card" style="display: flex; flex-direction: column; align-items: center; text-align: center;"
+                data-aos="fade-up" data-aos-delay="100">
+                <div style="padding: 1rem; border-radius: 50%; background: #dcfce7; margin-bottom: 1rem;">
+                    <i data-lucide="heart" style="color: var(--primary); width: 32px; height: 32px;"></i>
+                </div>
+                <h3>Health Discipline</h3>
+                <p>Automatic consistency. Your daily vitamins, guaranteed.</p>
+            </div>
+            <div class="card" style="display: flex; flex-direction: column; align-items: center; text-align: center;"
+                data-aos="fade-up" data-aos-delay="200">
+                <div style="padding: 1rem; border-radius: 50%; background: #e0e7ff; margin-bottom: 1rem;">
+                    <i data-lucide="truck" style="color: #4f46e5; width: 32px; height: 32px;"></i>
+                </div>
+                <h3>Neighborhood Trust</h3>
+                <p>Delivered by the same rider, every morning.</p>
+            </div>
+        </div>
+
+        <!-- Voice of the People (Testimonials) -->
+        <div style="text-align: center; margin-top: 8rem; margin-bottom: 4rem;">
+            <h2 style="margin-bottom: 3rem;" data-aos="fade-down">Voice of the People 💬</h2>
+            <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                <div class="card" style="text-align: left;" data-aos="fade-right" data-aos-delay="0">
+                    <div style="display: flex; gap: 0.25rem; color: #f59e0b; margin-bottom: 1rem;">
+                        <i data-lucide="star" style="width: 16px; fill: #f59e0b;"></i>
+                        <i data-lucide="star" style="width: 16px; fill: #f59e0b;"></i>
+                        <i data-lucide="star" style="width: 16px; fill: #f59e0b;"></i>
+                        <i data-lucide="star" style="width: 16px; fill: #f59e0b;"></i>
+                        <i data-lucide="star" style="width: 16px; fill: #f59e0b;"></i>
+                    </div>
+                    <p style="font-style: italic; margin-bottom: 1.5rem;">"The ginger kick in the Daily Core wakes me up
+                        better than coffee! My skin has never looked better."</p>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 40px; height: 40px; background: #cbd5e1; border-radius: 50%;"></div>
+                        <div>
+                            <span style="display: block; font-weight: bold;">Ama S.</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Verified Subscriber</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" style="text-align: left;" data-aos="fade-up" data-aos-delay="100">
+                    <div style="display: flex; gap: 0.25rem; color: #f59e0b; margin-bottom: 1rem;">
+                        <i data-lucide="star" style="width: 16px; fill: #f59e0b;"></i>
+                        <i data-lucide="star" style="width: 16px; fill: #f59e0b;"></i>
+                        <i data-lucide="star" style="width: 16px; fill: #f59e0b;"></i>
+                        <i data-lucide="star" style="width: 16px; fill: #f59e0b;"></i>
+                        <i data-lucide="star" style="width: 16px; fill: #f59e0b;"></i>
+                    </div>
+                    <p style="font-style: italic; margin-bottom: 1.5rem;">"I use the Office Pack. It's so convenient to
+                        have my juice waiting at my desk when I arrive. Productivity booster!"</p>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 40px; height: 40px; background: #cbd5e1; border-radius: 50%;"></div>
+                        <div>
+                            <span style="display: block; font-weight: bold;">Kojo M.</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Office Pack</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" style="text-align: left;" data-aos="fade-left" data-aos-delay="200">
+                    <div style="display: flex; gap: 0.25rem; color: #f59e0b; margin-bottom: 1rem;">
+                        <i data-lucide="star" style="width: 16px; fill: #f59e0b;"></i>
+                        <i data-lucide="star" style="width: 16px; fill: #f59e0b;"></i>
+                        <i data-lucide="star" style="width: 16px; fill: #f59e0b;"></i>
+                        <i data-lucide="star" style="width: 16px; fill: #f59e0b;"></i>
+                        <i data-lucide="star" style="width: 16px; fill: #f59e0b;"></i>
+                    </div>
+                    <p style="font-style: italic; margin-bottom: 1.5rem;">"Honest, fresh taste. You can tell they don't
+                        add sugar. The delivery rider is always polite and on time."</p>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 40px; height: 40px; background: #cbd5e1; border-radius: 50%;"></div>
+                        <div>
+                            <span style="display: block; font-weight: bold;">Sarah D.</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Verified Subscriber</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Highlight -->
+    <section style="background-color: var(--bg-secondary); padding: 6rem 0;">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 1.5rem;">
+            <h2 style="text-align: center; margin-bottom: 3rem;" data-aos="zoom-in">Our Signature Lines</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                <!-- Product 1 -->
+                <div class="card" data-aos="fade-up" data-aos-delay="0">
+                    <div
+                        style="height: 250px; background: linear-gradient(135deg, #dcfce7 0%, #ffffff 100%); border-radius: 0.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+                        <span class="floating-anim" style="font-size: 6rem;">🍍</span>
+                    </div>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                        <h3>Daily Core</h3>
+                        <span
+                            style="background: #dcfce7; color: #166534; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem; font-weight: bold;">TOP
+                            SELLER</span>
+                    </div>
+                    <p style="margin-bottom: 1.5rem;">The mass market favorite. Pineapple + Ginger for instant vitality.
+                    </p>
+
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                        <div>
+                            <span style="display: block; font-size: 0.9rem; color: var(--text-muted);">Price</span>
+                            <span style="font-weight: bold; font-size: 1.2rem;">GH₵ 15.00</span>
+                        </div>
+                        <a href="/checkout?product_id=1" class="btn btn-primary"
+                            style="padding: 0.5rem 1rem; text-decoration: none;">Get It</a>
+                    </div>
+                </div>
+
+                <!-- Product 2 -->
+                <div class="card" data-aos="fade-up" data-aos-delay="100">
+                    <div
+                        style="height: 250px; background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%); border-radius: 0.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center;">
+                        <span class="floating-anim" style="font-size: 6rem;">🥕</span>
+                    </div>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                        <h3>Immunity Boost</h3>
+                        <span
+                            style="background: #fef3c7; color: #92400e; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem; font-weight: bold;">PREMIUM</span>
+                    </div>
+                    <p style="margin-bottom: 1.5rem;">Orange + Carrot + Lime. Perfect for flu season and daily defense.
+                    </p>
+
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                        <div>
+                            <span style="display: block; font-size: 0.9rem; color: var(--text-muted);">Price</span>
+                            <span style="font-weight: bold; font-size: 1.2rem;">GH₵ 20.00</span>
+                        </div>
+                        <a href="/checkout?product_id=3" class="btn btn-primary"
+                            style="padding: 0.5rem 1rem; text-decoration: none;">Get It</a>
+                    </div>
+                </div>
+
+                <!-- Product 3 (Subscription remains to subscribe page) -->
+                <div class="card" style="border: 2px solid var(--primary);" data-aos="fade-up" data-aos-delay="200">
+                    <div
+                        style="height: 250px; background: linear-gradient(135deg, #e0e7ff 0%, #ffffff 100%); border-radius: 0.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center;">
+                        <div style="position: relative;">
+                            <span style="font-size: 4rem; position: absolute; top: -20px; left: -20px;">🍍</span>
+                            <span style="font-size: 4rem; position: absolute; top: -20px; right: -20px;">🥕</span>
+                            <span class="floating-anim" style="font-size: 4rem; z-index: 1;">🎒</span>
+                        </div>
+                    </div>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                        <h3>Office Pack</h3>
+                        <span
+                            style="background: var(--primary); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem; font-weight: bold;">BEST
+                            VALUE</span>
+                    </div>
+                    <p style="margin-bottom: 1.5rem;">5-day morning delivery. Set it and forget it for the work week.
+                    </p>
+                    <ul style="margin-bottom: 1.5rem; list-style: none;">
+                        <li style="display: flex; gap: 0.5rem; font-size: 0.9rem; margin-bottom: 0.25rem;">
+                            <i data-lucide="check" style="color: var(--primary); width: 16px;"></i> Morning Delivery
+                            (6AM)
+                        </li>
+                        <li style="display: flex; gap: 0.5rem; font-size: 0.9rem; margin-bottom: 0.25rem;">
+                            <i data-lucide="check" style="color: var(--primary); width: 16px;"></i> Free Delivery
+                        </li>
+                    </ul>
+
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                        <div>
+                            <span style="display: block; font-size: 0.9rem; color: var(--text-muted);">Weekly</span>
+                            <span style="font-weight: bold; font-size: 1.2rem;">GH₵ 70.00</span>
+                        </div>
+                        <a href="/subscribe" class="btn btn-primary" style="padding: 0.5rem 1rem;">Subscribe</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Quiz Modal -->
+<div id="quiz-modal"
+    style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="card" style="width: 90%; max-width: 500px; position: relative;">
+        <button onclick="closeQuiz()"
+            style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+
+        <!-- Step 1: Goal -->
+        <div id="quiz-step-1">
+            <h2 style="text-align: center; margin-bottom: 2rem;">What's your main goal? 🎯</h2>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <button onclick="nextStep(1, 'Vitality')" class="btn"
+                    style="justify-content: space-between; padding: 1rem; border: 1px solid var(--border-color);">
+                    <span>⚡ Energy & Focus</span>
+                    <i data-lucide="arrow-right"></i>
+                </button>
+                <button onclick="nextStep(1, 'Immunity')" class="btn"
+                    style="justify-content: space-between; padding: 1rem; border: 1px solid var(--border-color);">
+                    <span>🛡️ Immunity Boost</span>
+                    <i data-lucide="arrow-right"></i>
+                </button>
+                <button onclick="nextStep(1, 'Detox')" class="btn"
+                    style="justify-content: space-between; padding: 1rem; border: 1px solid var(--border-color);">
+                    <span>🌱 Detox & Cleanse</span>
+                    <i data-lucide="arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Result -->
+        <div id="quiz-step-2" style="display: none; text-align: center;">
+            <h2 style="margin-bottom: 1rem;">We Recommend:</h2>
+            <div id="quiz-result"
+                style="background: var(--bg-secondary); padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem;">
+                <h3 id="result-title" style="color: var(--primary); margin-bottom: 0.5rem;">Daily Core</h3>
+                <p id="result-desc">Perfect for energy.</p>
+            </div>
+            <a href="/subscribe" class="btn btn-primary" style="width: 100%;">Get Started with a Trial</a>
+            <button onclick="closeQuiz()"
+                style="background: none; border: none; text-decoration: underline; margin-top: 1rem; cursor: pointer;">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openQuiz() {
+        document.getElementById('quiz-modal').style.display = 'flex';
+        document.getElementById('quiz-step-1').style.display = 'block';
+        document.getElementById('quiz-step-2').style.display = 'none';
+        lucide.createIcons();
+    }
+
+    function closeQuiz() {
+        document.getElementById('quiz-modal').style.display = 'none';
+    }
+
+    function nextStep(current, choice) {
+        if (current === 1) {
+            // Logic for recommendation
+            let title = "Daily Core";
+            let desc = "Pineapple + Ginger. The perfect kickstart for energy and vitality.";
+
+            if (choice === 'Immunity') {
+                title = "Immunity Boost";
+                desc = "Carrot + Orange + Lime. Vitamin C overload for daily defense.";
+            } else if (choice === 'Detox') {
+                title = "Green Habit";
+                desc = "Spinach + Apple. Cleanse your system with pure greens.";
+            }
+
+            document.getElementById('result-title').innerText = title;
+            document.getElementById('result-desc').innerText = desc;
+
+            document.getElementById('quiz-step-1').style.display = 'none';
+            document.getElementById('quiz-step-2').style.display = 'block';
+        }
+    }
+</script>
+{% endblock %}

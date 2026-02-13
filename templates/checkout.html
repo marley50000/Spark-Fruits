@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="padding-top: 6rem; padding-bottom: 4rem; max-width: 600px;">
+    <h2 style="margin-bottom: 2rem; text-align: center;">Complete Your Order</h2>
+
+    <!-- Cart Section -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Your
+            Basket 🛒</h3>
+
+        <div id="cart-items" style="display: flex; flex-direction: column; gap: 1rem;">
+            <!-- Cart items injected here via JS -->
+        </div>
+
+        <div style="margin-top: 1.5rem; text-align: center;">
+            <a href="/menu" class="btn"
+                style="border: 1px solid var(--primary); color: var(--primary); padding: 0.5rem 1rem; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                <i data-lucide="plus" style="width: 16px;"></i> Add More Items
+            </a>
+        </div>
+    </div>
+
+    <!-- Checkout Form -->
+    <!-- Checkout Form -->
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <form id="checkoutForm" action="/subscribe" method="POST" class="card">
+        <input type="hidden" name="type" value="Order">
+        <input type="hidden" name="plan_name" id="plan_summary_input">
+        <input type="hidden" name="price" id="total_price_input">
+        <input type="hidden" name="cart_json" id="cart_json_input">
+        <input type="hidden" name="paystack_reference" id="paystack_reference">
+
+        <h3 style="margin-bottom: 1.5rem;">Delivery Details</h3>
+
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Full Name</label>
+            <input type="text" name="name" id="cust_name" required placeholder="John Doe"
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem;">
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Email Address</label>
+            <input type="email" name="email" id="cust_email" required placeholder="john@example.com"
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem;">
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Phone Number</label>
+            <input type="tel" name="phone" id="cust_phone" required placeholder="055 123 4567"
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem;">
+        </div>
+
+        <!-- Leaflet Map Integration -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Delivery Location</label>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <input type="text" id="location-input" name="location" required
+                    placeholder="Type address or pin on map..."
+                    style="flex: 1; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem;">
+                <button type="button" onclick="useMyLocation()" class="btn"
+                    style="border: 1px solid var(--primary); color: var(--primary); padding: 0 1rem; display: flex; align-items: center; gap: 0.5rem; white-space: nowrap;">
+                    <i data-lucide="crosshair" style="width: 18px;"></i> My Location
+                </button>
+            </div>
+            <div id="map"
+                style="height: 250px; width: 100%; border-radius: 0.5rem; border: 1px solid var(--border-color); z-index: 1;">
+            </div>
+            <input type="hidden" name="latitude" id="lat">
+            <input type="hidden" name="longitude" id="lng">
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">📍 Drag the pin to your exact
+                delivery spot.</p>
+        </div>
+
+        <div
+            style="border-top: 1px solid var(--border-color); padding-top: 1.5rem; margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <span style="font-weight: bold;">Total to Pay</span>
+            <span id="display-total" style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">GH₵
+                0.00</span>
+        </div>
+
+        <button type="button" onclick="initiateCheckout()" class="btn btn-primary"
+            style="width: 100%; padding: 1rem; font-size: 1.1rem; justify-content: center;">
+            Confirm Order
+        </button>
+
+        <div style="text-align: center; margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">
+            <i data-lucide="lock" style="width: 12px; display: inline;"></i> Secure payment powered by Paystack
+        </div>
+    </form>
+
+    <!-- Data bridge for incoming product -->
+    {% if product %}
+    <div id="incoming-product-data" data-id="{{ product.id }}" data-title="{{ product.title }}"
+        data-price="{{ product.price }}" data-description="{{ product.description }}" style="display:none;"></div>
+    {% endif %}
+</div>
+
+<script>
+    // ----------- CART LOGIC -----------
+    function getCart() {
+        try {
+            return JSON.parse(localStorage.getItem('dailyfresh_cart')) || [];
+        } catch (e) {
+            console.error("LocalStorage access denied or error:", e);
+            return []; // Fallback to empty cart if blocked
+        }
+    }
+
+    function saveCart(cartData) {
+        try {
+            localStorage.setItem('dailyfresh_cart', JSON.stringify(cartData));
+        } catch (e) {
+            console.error("Could not save to localStorage:", e);
+        }
+        renderCart(cartData);
+    }
+
+    // Initialize cart
+    let cart = getCart();
+
+    // Check for incoming product via data attribute
+    const incomingEl = document.getElementById('incoming-product-data');
+    if (incomingEl) {
+        const incomingProduct = {
+            id: parseInt(incomingEl.dataset.id),
+            title: incomingEl.dataset.title,
+            price: parseFloat(incomingEl.dataset.price),
+            description: incomingEl.dataset.description,
+            qty: 1
+        };
+
+        // Add or Increment
+        const existing = cart.find(item => item.id === incomingProduct.id);
+        if (existing) {
+            existing.qty += 1;
+        } else {
+            cart.push(incomingProduct);
+        }
+
+        // Save immediately
+        try {
+            localStorage.setItem('dailyfresh_cart', JSON.stringify(cart));
+        } catch (e) { }
+
+        // Clean URL
+        if (window.history.replaceState) {
+            const url = new URL(window.location);
+            url.searchParams.delete('product_id');
+            window.history.replaceState({}, '', url);
+        }
+    }
+
+    function updateQty(id, delta) {
+        const item = cart.find(i => i.id === id);
+        if (item) {
+            item.qty += delta;
+            if (item.qty <= 0) {
+                cart = cart.filter(i => i.id !== id);
+            }
+            saveCart(cart);
+        }
+    }
+
+    function renderCart(currentCart) {
+        if (!currentCart) currentCart = cart;
+
+        const container = document.getElementById('cart-items');
+        let total = 0;
+
+        container.innerHTML = '';
+
+        if (currentCart.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 1rem;">Your basket is empty.</p>';
+        } else {
+            currentCart.forEach(item => {
+                const itemTotal = item.price * item.qty;
+                total += itemTotal;
+
+                const div = document.createElement('div');
+                div.style.display = 'flex';
+                div.style.justifyContent = 'space-between';
+                div.style.alignItems = 'center';
+                div.style.paddingBottom = '1rem';
+                div.style.borderBottom = '1px solid #f1f5f9';
+
+                div.innerHTML = `
+                    <div style="flex: 1;">
+                        <span style="font-weight: bold; display: block;">${item.title}</span>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">GH₵ ${item.price.toFixed(2)} / unit</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <button type="button" onclick="updateQty(${item.id}, -1)" style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border-color); background: white; cursor: pointer;">-</button>
+                        <span style="font-weight: bold; width: 20px; text-align: center;">${item.qty}</span>
+                        <button type="button" onclick="updateQty(${item.id}, 1)" style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--primary); color: var(--primary); background: #ecfdf5; cursor: pointer;">+</button>
+                    </div>
+                    <div style="width: 80px; text-align: right; font-weight: bold;">
+                        GH₵ ${itemTotal.toFixed(2)}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        const totalEl = document.getElementById('display-total');
+        if (totalEl) totalEl.innerText = 'GH₵ ' + total.toFixed(2);
+
+        const submitBtn = document.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            if (currentCart.length === 0) {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.5';
+                submitBtn.style.cursor = 'not-allowed';
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+            }
+        }
+    }
+
+    function prepareOrderSubmission(e) {
+        if (cart.length === 0) {
+            e.preventDefault();
+            alert("Your basket is empty!");
+            return false;
+        }
+
+        const summary = cart.map(i => `${i.title} (x${i.qty})`).join(', ');
+        const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+
+        document.getElementById('plan_summary_input').value = summary;
+        document.getElementById('total_price_input').value = total.toFixed(2);
+        document.getElementById('cart_json_input').value = JSON.stringify(cart);
+        return true;
+    }
+
+    function initiateCheckout() {
+        // Populate hidden fields first
+        const dummyEvent = new Event('submit');
+        if (!prepareOrderSubmission(dummyEvent)) return;
+
+        const form = document.getElementById('checkoutForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const email = document.getElementById('cust_email').value;
+        const amount = parseFloat(document.getElementById('total_price_input').value) * 100;
+        const phone = document.getElementById('cust_phone').value;
+        const name = document.getElementById('cust_name').value;
+
+        if (amount <= 0) {
+            alert("Total amount must be greater than 0");
+            return;
+        }
+
+        const handler = PaystackPop.setup({
+            key: '{{ paystack_key }}',
+            email: email,
+            amount: amount,
+            currency: 'GHS',
+            metadata: {
+                custom_fields: [
+                    { display_name: "Name", variable_name: "name", value: name },
+                    { display_name: "Phone", variable_name: "phone", value: phone },
+                    { display_name: "Order Type", variable_name: "type", value: "Cart Order" }
+                ]
+            },
+            callback: function (response) {
+                document.getElementById('paystack_reference').value = response.reference;
+                form.submit();
+            },
+            onClose: function () {
+                alert('Transaction was not completed, window closed.');
+            }
+        });
+        handler.openIframe();
+    }
+
+    // Initial Render
+    renderCart(cart);
+
+    // ----------- MAP LOGIC -----------
+    window.useMyLocation = function () {
+        if (!navigator.geolocation) {
+            alert("Geolocation is not supported by your browser.");
+            return;
+        }
+
+        const btn = document.querySelector('button[onclick="useMyLocation()"]');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="loader-2" class="spin" style="width: 18px;"></i> Locating...';
+        btn.disabled = true;
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                // Dispatch event instead of accessing map directly in callback
+                const evt = new CustomEvent('location-found', { detail: { lat, lng } });
+                document.dispatchEvent(evt);
+
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            },
+            (error) => {
+                console.error("Geo Error:", error);
+                alert("Could not get location. Permission denied or unavailable.");
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Map Init
+        const defaultLat = 5.6037;
+        const defaultLng = -0.1870;
+
+        const map = L.map('map').setView([defaultLat, defaultLng], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        const marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+
+        setTimeout(() => { map.invalidateSize(); }, 500);
+
+        function updateInputs(lat, lng) {
+            const latEl = document.getElementById('lat');
+            const lngEl = document.getElementById('lng');
+            if (latEl) latEl.value = lat;
+            if (lngEl) lngEl.value = lng;
+        }
+
+        function reverseGeocode(lat, lng) {
+            const locInput = document.getElementById('location-input');
+            if (locInput) locInput.placeholder = "Fetching address...";
+
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.display_name && locInput) {
+                        locInput.value = data.display_name.split(',').slice(0, 3).join(',');
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+
+        marker.on('dragend', function (e) {
+            const pos = e.target.getLatLng();
+            updateInputs(pos.lat, pos.lng);
+            reverseGeocode(pos.lat, pos.lng);
+        });
+
+        map.on('click', function (e) {
+            marker.setLatLng(e.latlng);
+            updateInputs(e.latlng.lat, e.latlng.lng);
+            reverseGeocode(e.latlng.lat, e.latlng.lng);
+        });
+
+        document.addEventListener('location-found', function (e) {
+            const { lat, lng } = e.detail;
+            map.setView([lat, lng], 16);
+            marker.setLatLng([lat, lng]);
+            updateInputs(lat, lng);
+            reverseGeocode(lat, lng);
+        });
+
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        if (!document.getElementById('spin-style')) {
+            const style = document.createElement('style');
+            style.id = 'spin-style';
+            style.innerHTML = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }';
+            document.head.appendChild(style);
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 8rem; padding-bottom: 4rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1>Rider Dashboard</h1>
+        <a href="/switch_role/user" class="btn"
+            style="border: 1px solid var(--primary); color: var(--primary); background: transparent;">
+            <i data-lucide="shopping-bag" style="width: 18px; margin-right: 0.5rem;"></i> Switch to Buying
+        </a>
+    </div>
+
+    <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+        <button onclick="showTab('available')" id="tab-available" class="btn btn-primary">Available Orders</button>
+        <button onclick="showTab('my-orders')" id="tab-my-orders" class="btn"
+            style="background: white; color: var(--text-main); border: 1px solid var(--border-color);">My Active
+            Orders</button>
+    </div>
+
+    <!-- Available Orders -->
+    <div id="available" style="display: block;">
+        <h3>New Requests 🔔</h3>
+        {% if available %}
+        <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+            {% for order in available %}
+            <div class="card">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                    <div>
+                        <span
+                            style="background: #e2e8f0; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">#{{
+                            order.id }}</span>
+                        <h4 style="margin: 0.5rem 0;">{{ order.plan_name or 'Custom Order' }}</h4>
+                    </div>
+                    <span style="color: var(--primary); font-weight: bold;">GH₵ {{ order.total_price }}</span>
+                </div>
+
+                <p style="margin-bottom: 0.5rem;">
+                    <i data-lucide="map-pin" style="width: 16px; vertical-align: middle;"></i>
+                    {{ order.location.address if order.location else 'Unknown Location' }}
+                </p>
+
+                <button onclick="acceptOrder('{{ order.id }}')" class="btn btn-primary"
+                    style="width: 100%; margin-top: 1rem;">Accept Order</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p
+            style="color: var(--text-muted); padding: 2rem; text-align: center; background: #f8fafc; border-radius: 1rem;">
+            No new orders available right now.</p>
+        {% endif %}
+    </div>
+
+    <!-- My Orders -->
+    <div id="my-orders" style="display: none;">
+        <h3>My Deliveries 🚀</h3>
+        {% if my_orders %}
+        <div class="grid" style="grid-template-columns: 1fr; gap: 1.5rem;">
+            {% for order in my_orders %}
+            {% if order.status != 'Delivered' and order.status != 'Cancelled' %}
+            <div class="card" style="border-left: 5px solid var(--primary);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h4>Order #{{ order.id }} - {{ order.customer }}</h4>
+                    <span
+                        style="background: var(--primary); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem;">{{
+                        order.status }}</span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <p><strong>Pickup:</strong> East Legon Head Office</p>
+                        <p><strong>Dropoff:</strong> {{ order.location.address }}</p>
+                        <p><strong>Phone:</strong> <a href="tel:{{ order.phone }}">{{ order.phone }}</a></p>
+                    </div>
+                    <div style="text-align: right;">
+                        <p style="font-size: 1.5rem; font-weight: bold;">GH₵ {{ order.total_price }}</p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons based on Status -->
+                <div class="actions" style="display: flex; gap: 1rem;">
+                    <button onclick="updateStatus('{{ order.id }}', '{{ order.status }}')" class="btn btn-primary"
+                        style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                        <i data-lucide="navigation"></i>
+                        {% if order.status == 'Rider Assigned' %}
+                        Arrived at Pickup
+                        {% elif order.status == 'Arrived at Pickup' %}
+                        Confirm Pickup
+                        {% elif order.status == 'Picked Up' %}
+                        Arrived at Dropoff
+                        {% elif order.status == 'Arrived at Dropoff' %}
+                        Complete Delivery
+                        {% else %}
+                        Update Status
+                        {% endif %}
+                    </button>
+                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ order.location.lat }},{{ order.location.lng }}"
+                        target="_blank" class="btn"
+                        style="border: 1px solid var(--border-color); color: var(--text-main);">
+                        <i data-lucide="map"></i> Map
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <p
+            style="color: var(--text-muted); padding: 2rem; text-align: center; background: #f8fafc; border-radius: 1rem;">
+            You have no active deliveries.</p>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+    function showTab(tabName) {
+        document.getElementById('available').style.display = tabName === 'available' ? 'block' : 'none';
+        document.getElementById('my-orders').style.display = tabName === 'my-orders' ? 'block' : 'none';
+
+        // Update Buttons
+        const btnAvail = document.getElementById('tab-available');
+        const btnMy = document.getElementById('tab-my-orders');
+
+        if (tabName === 'available') {
+            btnAvail.className = 'btn btn-primary';
+            btnMy.className = 'btn';
+            btnMy.style.background = 'white';
+            btnMy.style.color = 'var(--text-main)';
+            btnMy.style.border = '1px solid var(--border-color)';
+        } else {
+            btnMy.className = 'btn btn-primary';
+            btnMy.style.background = 'var(--primary)';
+            btnMy.style.color = 'white';
+            btnMy.style.border = 'none';
+            btnAvail.className = 'btn';
+            btnAvail.style.background = 'white';
+            btnAvail.style.color = 'var(--text-main)';
+            btnAvail.style.border = '1px solid var(--border-color)';
+        }
+    }
+
+    async function acceptOrder(orderId) {
+        if (!confirm("Are you sure you want to accept this order?")) return;
+
+        try {
+            const res = await fetch(`/rider/order/${orderId}/accept`, { method: 'POST' });
+            const data = await res.json();
+
+            if (data.success) {
+                alert("Order Accepted!");
+                location.reload();
+            } else {
+                alert("Error: " + data.error);
+            }
+        } catch (e) {
+            alert("Network Error");
+        }
+    }
+
+    async function declineOrder(orderId) {
+        if (!confirm("Decline this order? It won't show up again.")) return;
+
+        try {
+            const res = await fetch(`/rider/order/${orderId}/decline`, { method: 'POST' });
+            const data = await res.json();
+
+            if (data.success) {
+                // Remove from UI immediately
+                const card = document.getElementById(`order-card-${orderId}`);
+                if (card) card.remove();
+            } else {
+                alert("Error: " + data.error);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function updateStatus(orderId, currentStatus) {
+        if (!navigator.geolocation) {
+            alert("Geolocation is not supported by your browser.");
+            return;
+        }
+
+        const btn = event.currentTarget;
+        const originalText = btn.innerText;
+        btn.innerText = "Locating...";
+        btn.disabled = true;
+
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            try {
+                const res = await fetch(`/rider/order/${orderId}/arrive`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lat, lng })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert("Verification Failed: " + data.message);
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                alert("Network Error");
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }, (error) => {
+            alert("Error getting location: " + error.message);
+            btn.innerText = originalText;
+            btn.disabled = false;
+        });
+    }
+
+    // Realtime Socket.IO
+    const socket = io();
+
+    socket.on('connect', () => {
+        console.log("Connected to WebSocket");
+    });
+
+    socket.on('new_order', (order) => {
+        // Only add if not ignored and not already present
+        const grid = document.querySelector('#available .grid');
+        if (!grid) return; // Tab might be hidden or empty state
+
+        if (document.getElementById(`order-card-${order.id}`)) return;
+
+        // Play Sound (Optional)
+        // const audio = new Audio('/static/notification.mp3');
+        // audio.play();
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.id = `order-card-${order.id}`;
+        card.style.animation = "fadeIn 0.5s";
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <div>
+                    <span style="background: #e2e8f0; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">#New</span>
+                    <h4 style="margin: 0.5rem 0;">${order.plan_name || 'Custom Order'}</h4>
+                </div>
+                <span style="color: var(--primary); font-weight: bold;">GH₵ ${order.total_price}</span>
+            </div>
+            <p style="margin-bottom: 0.5rem;">
+                <i data-lucide="map-pin" style="width: 16px; vertical-align: middle;"></i> 
+                ${order.location ? order.location.address : 'Unknown'}
+            </p>
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button onclick="acceptOrder('${order.id}')" class="btn btn-primary" style="flex: 1;">Accept</button>
+                <button onclick="declineOrder('${order.id}')" class="btn" style="border: 1px solid #ef4444; color: #ef4444;">Decline</button>
+            </div>
+        `;
+
+        // Remove "No orders" message if present
+        const noOrderMsg = document.querySelector('#available p');
+        if (noOrderMsg && noOrderMsg.innerText.includes("No new orders")) {
+            noOrderMsg.remove();
+        }
+
+        grid.prepend(card);
+        lucide.createIcons();
+
+        // Show Toast
+        const toast = document.createElement('div');
+        toast.style.cssText = "position: fixed; top: 20px; right: 20px; background: var(--primary); color: white; padding: 1rem; border-radius: 0.5rem; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1);";
+        toast.innerText = "New Order Received! 🔔";
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    });
+
+    socket.on('order_taken', (data) => {
+        // Remove from available list if someone else took it
+        const card = document.getElementById(`order-card-${data.id}`);
+        if (card) {
+            card.style.opacity = '0.5';
+            setTimeout(() => card.remove(), 500);
+        }
+    });
+
+    // Keep polling as fallback every 15s instead of 5s
+    setInterval(async () => {
+        // ... existing polling logic if needed, or remove ...
+    }, 15000); 
+</script>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="padding-top: 6rem; padding-bottom: 4rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1 class="animate-fade-in">My Dashboard</h1>
+        <div style="display: flex; gap: 0.5rem;">
+            {% if session.get('is_rider') %}
+            <a href="/switch_role/rider" class="btn"
+                style="border: 1px solid var(--primary); color: var(--primary); background: transparent;">
+                <i data-lucide="bike" style="width: 18px; margin-right: 0.5rem;"></i> Rider Mode
+            </a>
+            {% endif %}
+            <a href="/logout" class="btn"
+                style="background: #ef4444; color: white; border: none; text-decoration: none;">Logout</a>
+        </div>
+    </div>
+
+    <!-- Active Subscription Status (Mock data for now, or based on latest order) -->
+    <div class="card animate-fade-in"
+        style="margin-bottom: 3rem; background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%);">
+        <div style="display: flex; align-items: flex-start; gap: 1.5rem;">
+            <div style="background: var(--primary); color: white; padding: 1rem; border-radius: 50%;">
+                <i data-lucide="zap" style="width: 32px; height: 32px;"></i>
+            </div>
+            <div>
+                <h2 style="margin-bottom: 0.5rem; font-size: 1.5rem;">Prescription Active</h2>
+                <p style="margin-bottom: 1rem;">You are currently fueling your body with the <strong>Office
+                        Pack</strong>.</p>
+                <div style="display: flex; gap: 1rem;">
+                    <a href="/menu" class="btn btn-primary" style="text-decoration: none;">Modify Plan</a>
+                    <a href="/track" class="btn"
+                        style="background: white; border: 1px solid var(--border-color); text-decoration: none;">Track
+                        Delivery</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order History -->
+    <h2 style="margin-bottom: 1.5rem;" class="animate-fade-in">Order History</h2>
+
+    {% if orders %}
+    <div class="grid" style="grid-template-columns: 1fr; gap: 1rem;">
+        {% for order in orders %}
+        <div class="card animate-fade-in"
+            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.25rem;">
+                    {% if order.plan_name %}
+                    {{ order.plan_name }}
+                    {% else %}
+                    One-Time Order
+                    {% endif %}
+                </div>
+                <div style="color: var(--text-muted); font-size: 0.9rem;">
+                    Placed on {{ order.created_at[:10] }} &bull; #{{ order.id }}
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 2rem;">
+                <div style="text-align: right;">
+                    <span style="display: block; font-weight: bold;">GH₵ {{ "%.2f"|format(order.total_price|float)
+                        }}</span>
+                    <span style="font-size: 0.85rem; font-weight: 500;"
+                        class="{% if order.status == 'Delivered' %}status-delivered{% elif order.status == 'In Transit' %}status-in-transit{% else %}status-default{% endif %}">
+                        {{ order.status }}
+                    </span>
+                </div>
+                <button class="btn" style="background: var(--bg-secondary); padding: 0.5rem;">
+                    <i data-lucide="chevron-right"></i>
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card animate-fade-in" style="text-align: center; padding: 4rem 2rem;">
+        <div
+            style="background: var(--bg-secondary); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+            <i data-lucide="shopping-bag" style="color: var(--text-muted); width: 32px; height: 32px;"></i>
+        </div>
+        <h3>No orders yet</h3>
+        <p>Start your health journey today.</p>
+        <a href="/subscribe" class="btn btn-primary" style="margin-top: 1rem; text-decoration: none;">Get Started</a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

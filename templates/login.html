@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="padding-top: 6rem; padding-bottom: 4rem; max-width: 400px;">
+    <div class="card">
+        <h2 style="margin-bottom: 2rem; text-align: center;">Welcome Back</h2>
+
+        {% if error %}
+        <div
+            style="background: #fee2e2; color: #b91c1c; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1.5rem; text-align: center;">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form action="/login" method="POST">
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Email</label>
+                <input type="email" name="username" required
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem;">
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Password</label>
+                <input type="password" name="password" required
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem;">
+            </div>
+
+            <button type="submit" class="btn btn-primary"
+                style="width: 100%; padding: 0.75rem; justify-content: center;">
+                Login
+            </button>
+        </form>
+
+        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem;">
+            <span style="color: var(--text-muted);">Don't have an account?</span>
+            <a href="/signup" style="color: var(--primary); text-decoration: none; font-weight: bold;">Sign Up</a>
+            <div style="margin-top: 1rem;">
+                <a href="/rider/signup"
+                    style="color: var(--text-muted); text-decoration: none; font-size: 0.8rem;">Apply to be a Rider
+                    🛵</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

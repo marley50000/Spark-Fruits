@@ -1,0 +1,136 @@
+{
+    "riders": [
+        {
+            "id": "f82bccf4-2c44-4ec6-819e-434573ef5422",
+            "name": "Test Rider",
+            "phone": "0555555555",
+            "vehicle_type": "Motorbike",
+            "status": "available"
+        },
+        {
+            "id": "2589b667-3b99-4d20-be7d-71c34844b51a",
+            "name": "Test Rider",
+            "phone": "0555555555",
+            "vehicle_type": "Motorbike",
+            "status": "available"
+        },
+        {
+            "id": "0acc6652-0fde-41db-a80c-f1a25b7de3ad",
+            "name": "Test Rider",
+            "phone": "0555555555",
+            "vehicle_type": "Motorbike",
+            "status": "available"
+        },
+        {
+            "id": "dbb5d8a6-48bb-41bb-8420-d9500dadd61f",
+            "name": "Test Rider",
+            "phone": "0555555555",
+            "vehicle_type": "Motorbike",
+            "status": "available"
+        },
+        {
+            "id": "34351e9e-2960-4e40-bf13-332729de6cd3",
+            "name": "Test Rider",
+            "phone": "0555555555",
+            "vehicle_type": "Motorbike",
+            "status": "available"
+        },
+        {
+            "id": "67bf62dc-2e5b-414a-b900-63091ae08a64",
+            "name": "Test Rider",
+            "phone": "0555555555",
+            "vehicle_type": "Motorbike",
+            "status": "available"
+        },
+        {
+            "id": "d5def62c-d5da-4fab-9203-49eb46aaff59",
+            "name": "Test Rider",
+            "phone": "0555555555",
+            "vehicle_type": "Motorbike",
+            "status": "available"
+        },
+        {
+            "id": "9da8c81f-2a21-477b-90dd-9f0ced1a4ed5",
+            "name": "Fasal",
+            "phone": "0555436669",
+            "vehicle_type": "Motorbike",
+            "status": "available"
+        },
+        {
+            "id": "eb1173e1-5df3-4332-bca3-7703a49df7ab",
+            "name": "Sam Dan",
+            "phone": "0555436669",
+            "vehicle_type": "Bicycle",
+            "status": "available"
+        },
+        {
+            "id": "3ec811bd-6b70-4d16-bc17-8693115cc3e7",
+            "name": "Sam Dan",
+            "phone": "0555436669",
+            "vehicle_type": "Motorbike",
+            "status": "available"
+        },
+        {
+            "id": "a7cb23f9-1ea6-4341-b8c1-794eedc8065a",
+            "name": "Sam Dan",
+            "phone": "0555436669",
+            "vehicle_type": "Motorbike",
+            "status": "available"
+        },
+        {
+            "id": "8b19a9d1-eba2-47b7-91d4-6f4cd3ce3f90",
+            "name": "Sam Dan",
+            "phone": "0555436669",
+            "vehicle_type": "Car",
+            "status": "available"
+        },
+        {
+            "id": "164967e6-72c1-4eb2-9630-9e5c24161cfb",
+            "name": "Sam Dan",
+            "phone": "0555436669",
+            "vehicle_type": "Car",
+            "status": "available"
+        },
+        {
+            "id": "cad0681b-1e02-4a31-b79e-8a68c046ca0d",
+            "name": "Sam Dan",
+            "phone": "0555436669",
+            "vehicle_type": "Motorbike",
+            "status": "available"
+        },
+        {
+            "id": "6977bd9f-9dce-45ed-9dfe-b74f852cdfc6",
+            "name": "Sam Dan",
+            "phone": "0555436669",
+            "vehicle_type": "Motorbike",
+            "status": "available"
+        },
+        {
+            "id": "8b5db5dd-ced6-41e6-9545-d3525dd22698",
+            "name": "Spark Marley",
+            "phone": "0551389510",
+            "vehicle_type": "Motorbike",
+            "status": "available"
+        }
+    ],
+    "orders": [
+        {
+            "customer": "Test Customer",
+            "email": "cust_1770673469@test.com",
+            "plan_name": "Test Plan",
+            "type": "Subscription",
+            "status": "Pending",
+            "phone": "0244444444",
+            "total_price": 50.0,
+            "location": {
+                "address": "Test Location, Accra",
+                "lat": "5.6037",
+                "lng": "-0.1870"
+            },
+            "cart_json": null,
+            "payment_ref": null,
+            "id": 1770673474,
+            "address_short": "Test Location, Accra"
+        }
+    ]
+}

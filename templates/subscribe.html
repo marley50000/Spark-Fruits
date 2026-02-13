@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="padding-top: 6rem; padding-bottom: 4rem;">
+    <h1 style="text-align: center; margin-bottom: 1rem;">Choose Your Habit</h1>
+    <p style="text-align: center; max-width: 600px; margin: 0 auto 3rem;">
+        Subscribe to health discipline. Pause or cancel anytime.
+    </p>
+
+    <!-- Plans Grid -->
+    <div class="grid"
+        style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 4rem;">
+
+        <!-- Plan 1: Office Pack -->
+        <div class="card plan-card" data-plan="office" data-price="70.00" onclick="selectPlan('office', 70.00)"
+            style="cursor: pointer; border: 2px solid var(--primary); transform: scale(1.05);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0;">Office Pack</h3>
+                <span
+                    style="background: var(--primary); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem; font-weight: bold;">Most
+                    Popular</span>
+            </div>
+            <p style="font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem;">GH₵ 70 <span
+                    style="font-size: 1rem; font-weight: normal; color: var(--text-muted);">/ week</span></p>
+            <p style="margin-bottom: 1.5rem;">5 Bottles (Mon-Fri)</p>
+            <ul style="list-style: none; margin-bottom: 2rem;">
+                <li style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;"><i data-lucide="check"
+                        style="color: var(--primary); width: 18px;"></i> Delivered to Desk</li>
+                <li style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;"><i data-lucide="check"
+                        style="color: var(--primary); width: 18px;"></i> Morning Guarantee (8 AM)</li>
+                <li style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;"><i data-lucide="check"
+                        style="color: var(--primary); width: 18px;"></i> Free Delivery</li>
+            </ul>
+            <button class="btn btn-primary" style="width: 100%;">Selected</button>
+        </div>
+
+        <!-- Plan 2: Home Essentials -->
+        <div class="card plan-card" data-plan="daily" data-price="100.00" onclick="selectPlan('daily', 100.00)"
+            style="cursor: pointer; border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0;">Home Essentials</h3>
+            </div>
+            <p style="font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem;">GH₵ 100 <span
+                    style="font-size: 1rem; font-weight: normal; color: var(--text-muted);">/ week</span></p>
+            <p style="margin-bottom: 1.5rem;">7 Bottles (Mon-Sun)</p>
+            <ul style="list-style: none; margin-bottom: 2rem;">
+                <li style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;"><i data-lucide="check"
+                        style="color: var(--primary); width: 18px;"></i> Delivered to Doorstep</li>
+                <li style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;"><i data-lucide="check"
+                        style="color: var(--primary); width: 18px;"></i> Early Drop (6 AM)</li>
+                <li style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;"><i data-lucide="check"
+                        style="color: var(--primary); width: 18px;"></i> Family Size Options</li>
+            </ul>
+            <button class="btn" style="width: 100%; border: 1px solid var(--border-color);">Select Plan</button>
+        </div>
+
+        <!-- Plan 3: Daily Starter -->
+        <div class="card plan-card" data-plan="starter" data-price="10.00" onclick="selectPlan('starter', 10.00)"
+            style="cursor: pointer; border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0;">Daily Starter</h3>
+                <span
+                    style="background: #fef3c7; color: #92400e; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem; font-weight: bold;">One-Off</span>
+            </div>
+            <p style="font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem;">GH₵ 10.00 <span
+                    style="font-size: 1rem; font-weight: normal; color: var(--text-muted);">/ day</span></p>
+            <p style="margin-bottom: 1.5rem;">1 Bottle (Any Flavor)</p>
+            <ul style="list-style: none; margin-bottom: 2rem;">
+                <li style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;"><i data-lucide="check"
+                        style="color: var(--primary); width: 18px;"></i> Try Before You Commit</li>
+                <li style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;"><i data-lucide="check"
+                        style="color: var(--primary); width: 18px;"></i> Standard Delivery</li>
+                <li style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;"><i data-lucide="check"
+                        style="color: var(--primary); width: 18px;"></i> No Subscription</li>
+            </ul>
+            <button class="btn" style="width: 100%; border: 1px solid var(--border-color);">Select Plan</button>
+        </div>
+
+    </div>
+
+    <!-- Checkout Form -->
+    <div class="card" style="max-width: 600px; margin: 0 auto; background: var(--bg-secondary);">
+        <h3 style="text-align: center; margin-bottom: 1rem;">Start Your Subscription</h3>
+        <script src="https://js.paystack.co/v1/inline.js"></script>
+        <form id="subscribeForm" action="/subscribe" method="POST"
+            style="display: flex; flex-direction: column; gap: 1rem;">
+            <input type="hidden" name="plan_name" id="plan_name" value="">
+            <input type="hidden" name="price" id="price_input" value="">
+            <input type="hidden" name="paystack_reference" id="paystack_reference" value="">
+
+            <input type="text" name="name" id="cust_name" placeholder="Full Name" required>
+            <input type="email" name="email" id="cust_email" placeholder="Email Address" required>
+            <input type="tel" name="phone" id="cust_phone" placeholder="WhatsApp Number" required>
+            <input type="text" name="address" placeholder="Delivery Address / Landmark" required>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                <div>
+                    <span style="display: block; font-size: 0.9rem; color: var(--text-muted);">Total to Pay</span>
+                    <span id="total-price" style="font-weight: bold; font-size: 1.2rem;">GH₵ 0.00</span>
+                </div>
+                <button type="button" onclick="payWithPaystack()" class="btn btn-primary"
+                    style="padding: 0.75rem 2rem;">
+                    Pay & Subscribe
+                </button>
+            </div>
+            <p style="font-size: 0.8rem; text-align: center; margin-top: 0.5rem;">Secured by Paystack</p>
+        </form>
+
+        <script>
+            function payWithPaystack() {
+                const form = document.getElementById('subscribeForm');
+
+                // Basic validation
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
+                const email = document.getElementById('cust_email').value;
+                const amount = parseFloat(document.getElementById('price_input').value) * 100; // Paystack expects kobo/pesewas
+                const phone = document.getElementById('cust_phone').value;
+                const name = document.getElementById('cust_name').value;
+                const plan = document.getElementById('plan_name').value;
+
+                if (!amount || amount <= 0) {
+                    alert("Please select a plan first.");
+                    return;
+                }
+
+                const handler = PaystackPop.setup({
+                    key: '{{ paystack_key }}',
+                    email: email,
+                    amount: amount,
+                    currency: 'GHS',
+                    metadata: {
+                        custom_fields: [
+                            { display_name: "Name", variable_name: "name", value: name },
+                            { display_name: "Phone", variable_name: "phone", value: phone },
+                            { display_name: "Plan", variable_name: "plan", value: plan }
+                        ]
+                    },
+                    callback: function (response) {
+                        // Payment complete!
+                        document.getElementById('paystack_reference').value = response.reference;
+                        form.submit();
+                    },
+                    onClose: function () {
+                        alert('Transaction was not completed, window closed.');
+                    }
+                });
+                handler.openIframe();
+            }
+        </script>
+    </div>
+</div>
+
+<script>
+    function selectPlan(plan, price) {
+        // Reset all cards
+        document.querySelectorAll('.plan-card').forEach(card => {
+            card.style.border = '1px solid var(--border-color)';
+            card.style.transform = 'scale(1)';
+            const btn = card.querySelector('button');
+            btn.className = 'btn';
+            btn.style.border = '1px solid var(--border-color)';
+            btn.innerText = 'Select Plan';
+        });
+
+        // Highlight selected
+        const selected = document.querySelector(`.plan-card[data-plan="${plan}"]`);
+        selected.style.border = '2px solid var(--primary)';
+        selected.style.transform = 'scale(1.05)';
+        const btn = selected.querySelector('button');
+        btn.className = 'btn btn-primary';
+        btn.style.border = 'none';
+        btn.innerText = 'Selected';
+
+        // Update Total
+        document.getElementById('total-price').innerText = `GH₵ ${price.toFixed(2)}`;
+
+        // Update Form Inputs
+        document.getElementById('plan_name').value = selected.querySelector('h3').innerText;
+        document.getElementById('price_input').value = price;
+    }
+</script>
+{% endblock %}
