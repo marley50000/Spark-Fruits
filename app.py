@@ -421,7 +421,9 @@ def subscribe():
         # Map back to template expectations if needed (e.g. 'plan' vs 'plan_name')
         confirm_order['plan'] = confirm_order.get('plan_name')
         
-        return render_template('track.html', title="Order Confirmed", order=confirm_order, show_success=True)
+        # Redirect to tracking page so user has a persistent URL
+        return redirect(url_for('track', order_id=confirm_order.get('id'), show_success=1))
+
     if session.get('role') == 'rider':
         return redirect(url_for('rider_dashboard'))
     return render_template('subscribe.html', title="Subscribe & Save", paystack_key=os.getenv('PAYSTACK_PUBLIC_KEY'))
@@ -438,20 +440,29 @@ def checkout():
 def track():
     if session.get('role') == 'rider':
         return redirect(url_for('rider_dashboard'))
+    
     order = None
+    order_id = request.args.get('order_id') # GET param
+    
     if request.method == 'POST':
         order_id = request.form.get('order_id')
+        
+    show_success = request.args.get('show_success')
+        
+    if order_id:
         if supabase:
             try:
                 # Try to parse ID 
                 oid = int(order_id)
-                response = supabase.table('orders').select("*").eq('id', oid).execute()
+                # Use Admin client if available to ensure we can see the order even if not logged in (Public Tracking)
+                client = supabase_admin if supabase_admin else supabase
+                response = client.table('orders').select("*").eq('id', oid).execute()
                 if response.data:
                     order = response.data[0]
             except:
                 pass
         
-        # Fallback Local Check
+        # Fallback Local Check (if Supabase failed or empty)
         if not order:
              for o in local_db['orders']:
                  if str(o.get('id')) == str(order_id):
@@ -462,8 +473,51 @@ def track():
         if order:
             order['plan'] = order.get('plan_name')
             order['pressed'] = order.get('pressed_time', 'Pending')
+            
+            # Fetch Rider Info if assigned
+            if order.get('rider_id'):
+                try:
+                    client = supabase_admin if supabase_admin else supabase
+                    r_res = client.table('riders').select('name, vehicle_type').eq('id', order['rider_id']).execute()
+                    if r_res.data:
+                        order['rider_name'] = r_res.data[0]['name']
+                except: pass
 
-    return render_template('track.html', title="Track Order", order=order)
+    return render_template('track.html', title="Track Order", order=order, show_success=show_success)
+
+@app.route('/api/order/<order_id>/track')
+def api_track_order(order_id):
+    # Public API for frontend map to poll status
+    order = None
+    rider = None
+    
+    if supabase:
+        try:
+            client = supabase_admin if supabase_admin else supabase
+            res = client.table('orders').select("*").eq('id', order_id).execute()
+            if res.data: order = res.data[0]
+        except: pass
+        
+    if order and order.get('rider_id'):
+        try:
+             client = supabase_admin if supabase_admin else supabase
+             # In a real app, we would fetch rider's real-time coords from a 'rider_locations' table
+             # Here we just fetch static rider profile
+             r_res = client.table('riders').select('*').eq('id', order['rider_id']).execute()
+             if r_res.data: rider = r_res.data[0]
+        except: pass
+        
+    if not order:
+        return jsonify({'error': 'Not found'}), 404
+        
+    return jsonify({
+        'status': order.get('status'),
+        'rider': {
+            'name': rider.get('name') if rider else 'Assigning...',
+            'lat': rider.get('lat', order.get('location', {}).get('lat')) if rider else None, # Mock: use order loc if no real rider loc
+            'lng': rider.get('lng', order.get('location', {}).get('lng')) if rider else None
+        } if order.get('rider_id') else None
+    })
 
 @socketio.on('join_order')
 def on_join(data):
@@ -734,18 +788,22 @@ def rider_signup():
                     
                 except Exception as e:
                     print(f"Rider Insert Error: {e}")
-                    # If error is 'violates foreign key', it means user ID is not in auth.users (impossible if we just created it?)
-                    # OR we differ in table constraints.
-                    # If error is 'uniqueness', maybe they are already a rider?
                     msg = str(e)
-                    if '23505' in msg: # Duplicate key
-                         # Already a rider, just log them in
+                    
+                    # Handle Duplicate Key (Already a rider)
+                    if '23505' in msg: 
                          session['user_id'] = user_obj.id
                          session['role'] = 'rider'
                          session['is_rider'] = True
                          return redirect(url_for('rider_dashboard'))
                     
-                    error = f"Database Error: {msg}"
+                    # Handle Foreign Key Violation (User not in public.users)
+                    # This happens if the trigger to sync auth.users -> public.users is missing/failed
+                    elif '23503' in msg:
+                        error = "Please create a standard account and Log In first, then apply to be a rider."
+                    
+                    else:
+                        error = f"Database Error: {msg}"
 
     return render_template('rider_signup.html', error=error, prefill_email=prefill_email)
 
