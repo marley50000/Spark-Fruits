@@ -102,6 +102,7 @@
 
     // Routing Control
     let routingControl = null;
+    window.initialBoundsSet = false;
 
     // Realtime Location & Socket
     const socket = io();
@@ -175,7 +176,7 @@
             riderMarker.setLatLng([lat, lng]);
         }
 
-        map.panTo([lat, lng]); // Keep rider centered
+        // map.panTo([lat, lng]); // Disabled to prevent shaking. User can pan manually.
 
         // Emit Location Update
         document.getElementById('status-badge').innerText = "Sending...";
@@ -214,12 +215,26 @@
                 lineOptions: {
                     styles: [{ color: 'blue', opacity: 0.6, weight: 4 }]
                 },
-                createMarker: function () { return null; }, // Don't create default markers, we have our own
+                createMarker: function () { return null; },
                 addWaypoints: false,
                 draggableWaypoints: false,
-                fitSelectedRoutes: true,
+                fitSelectedRoutes: false, // DISABLE auto-zoom
                 showAlternatives: false
             }).addTo(map);
+
+            // Manually fit bounds only once on load
+            routingControl.on('routesfound', function (e) {
+                if (!window.initialBoundsSet) {
+                    const routes = e.routes;
+                    if (routes && routes.length > 0) {
+                        // Use the bounds of the calculated route
+                        // map.fitBounds(routes[0].coordinates, {padding: [50, 50]}); 
+                        // Simple bounds
+                        map.fitBounds(L.latLngBounds([currentLat, currentLng], [destLat, destLng]), { padding: [50, 50] });
+                    }
+                    window.initialBoundsSet = true;
+                }
+            });
         }
     }
 
