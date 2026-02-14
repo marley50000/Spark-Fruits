@@ -532,12 +532,14 @@ def on_join(data):
 @socketio.on('update_location')
 def on_location_update(data):
     # Data: { rider_id, lat, lng, order_ids: [] }
+    print(f"DEBUG: Received location update: {data}")
     rider_id = data.get('rider_id')
     lat = data.get('lat')
     lng = data.get('lng')
     order_ids = data.get('order_ids', [])
     
     if not rider_id or not lat or not lng:
+        print("DEBUG: Missing data in location update")
         return
 
     # Update Rider Location in DB
@@ -564,6 +566,7 @@ def on_location_update(data):
     
     # Emit to all active order rooms
     for oid in order_ids:
+        print(f"DEBUG: Emitting location to room {oid}")
         socketio.emit('location_update', {
             'rider_id': rider_id,
             'lat': lat,
@@ -1019,6 +1022,36 @@ def rider_accept_order(order_id):
     except Exception as e:
         print(f"Accept Error: {e}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/rider/order/<order_id>/navigate')
+def rider_navigate(order_id):
+    if session.get('role') != 'rider':
+        return redirect(url_for('login'))
+        
+    try:
+        # Handle int/str ID
+        try: oid = int(order_id)
+        except: oid = order_id
+        
+        client = supabase_admin if supabase_admin else supabase
+        
+        # Get Order Details
+        res = client.table('orders').select('*').eq('id', oid).execute()
+        if not res.data:
+            return "Order not found", 404
+            
+        order = res.data[0]
+        
+        # Ensure location data exists
+        if not order.get('location'):
+            # Fallback for dev
+            order['location'] = {'lat': 5.6037, 'lng': -0.1870, 'address': 'Unknown'}
+            
+        return render_template('rider_navigation.html', order=order)
+        
+    except Exception as e:
+        print(f"Nav Error: {e}")
+        return redirect(url_for('rider_dashboard'))
 
 @app.route('/rider/order/<order_id>/arrive', methods=['POST'])
 def rider_arrive(order_id):

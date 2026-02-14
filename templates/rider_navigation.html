@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block head %}
+<!-- Leaflet & Routing Machine -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+
+<style>
+    #map {
+        height: 80vh;
+        /* Full height minus some header space */
+        width: 100%;
+        border-radius: 1rem;
+        margin-top: 1rem;
+    }
+
+    .leaflet-routing-container {
+        display: none !important;
+        /* Hide the turn-by-turn text box to save space on mobile */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 6rem; padding-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <a href="{{ url_for('rider_dashboard') }}" class="btn"
+            style="border: 1px solid var(--border-color); padding: 0.5rem 1rem;">
+            <i data-lucide="arrow-left"></i> Back
+        </a>
+        <h2 style="margin: 0;">Navigate</h2>
+        <div id="status-badge"
+            style="background: var(--primary); color: white; padding: 0.25rem 0.5rem; border-radius: 0.5rem; font-size: 0.8rem;">
+            Connecting...
+        </div>
+    </div>
+
+    <!-- Order Info -->
+    <div class="card" style="margin-top: 1rem; padding: 1rem;">
+        <h3 style="margin: 0;">{{ order.plan_name or 'Order #' ~ order.id }}</h3>
+        <p style="color: var(--text-muted); margin-bottom: 0;">
+            <i data-lucide="map-pin"></i> {{ order.location.address }}
+        </p>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- Action Button -->
+    <button onclick="completeOrder()" class="btn btn-primary"
+        style="width: 100%; margin-top: 1rem; padding: 1rem; font-size: 1.1rem;">
+        <i data-lucide="check-circle"></i> Complete Delivery
+    </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const orderId = "{{ order.id }}";
+    const riderId = "{{ session.get('user_id') }}";
+
+    // Vendor Location (Fixed for MVP)
+    const vendorLat = 5.6037;
+    const vendorLng = -0.1870;
+
+    // Customer Location
+    // Safe extraction of coordinates
+    const destLat = parseFloat("{{ order.location.lat }}");
+    const destLng = parseFloat("{{ order.location.lng }}");
+
+    // Initialize Map (Default center Accra)
+    const map = L.map('map').setView([5.6037, -0.1870], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    // Destination Marker
+    const destIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+    L.marker([destLat, destLng], { icon: destIcon }).addTo(map).bindPopup("<b>Customer:</b> {{ order.customer }}").openPopup();
+
+    // Rider Marker
+    const riderIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+    let riderMarker = null;
+
+    // Routing Control
+    let routingControl = null;
+
+    // Realtime Location & Socket
+    const socket = io();
+
+    socket.on('connect', () => {
+        document.getElementById('status-badge').innerText = "Live";
+        document.getElementById('status-badge').style.background = "#16a34a"; // Green
+        startNavigation();
+    });
+
+    socket.on('disconnect', () => {
+        document.getElementById('status-badge').innerText = "Offline";
+        document.getElementById('status-badge').style.background = "#dc2626"; // Red
+    });
+
+    let watchId = null;
+
+    function startNavigation() {
+        if (!navigator.geolocation) {
+            alert("Geolocation is needed for navigation.");
+            document.getElementById('status-badge').innerText = "No GPS";
+            return;
+        }
+
+        console.log("Starting Geolocation Watch...");
+
+        // Strategy: Use watchPosition for high-accuracy updates
+        watchId = navigator.geolocation.watchPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                console.log(`GPS Update: ${lat}, ${lng}`);
+                handleLocationUpdate(lat, lng);
+            },
+            (error) => {
+                console.error("Loc Error:", error);
+                document.getElementById('status-badge').innerText = "GPS Error";
+            },
+            {
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 5000
+            }
+        );
+
+        // Add a fallback interval to force an update every 10s if watchPosition is quiet
+        setInterval(() => {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    handleLocationUpdate(position.coords.latitude, position.coords.longitude);
+                },
+                (err) => console.log("Interval GPS check failed", err),
+                { enableHighAccuracy: true, timeout: 5000 }
+            );
+        }, 10000);
+    }
+
+    let lastSent = 0;
+
+    function handleLocationUpdate(lat, lng) {
+        // Debounce slightly to avoid flooding socket if watchPosition triggers too fast
+        const now = Date.now();
+        if (now - lastSent < 2000) return; // Limit to one update per 2 seconds
+        lastSent = now;
+
+        // Update Marker
+        if (!riderMarker) {
+            riderMarker = L.marker([lat, lng], { icon: riderIcon }).addTo(map);
+        } else {
+            riderMarker.setLatLng([lat, lng]);
+        }
+
+        map.panTo([lat, lng]); // Keep rider centered
+
+        // Emit Location Update
+        document.getElementById('status-badge').innerText = "Sending...";
+        socket.emit('update_location', {
+            rider_id: riderId,
+            lat: lat,
+            lng: lng,
+            order_ids: [orderId]
+        });
+
+        setTimeout(() => {
+            document.getElementById('status-badge').innerText = "Live";
+        }, 1000);
+
+        // Update Route
+        updateRoute(lat, lng);
+    }
+
+    function updateRoute(currentLat, currentLng) {
+        if (routingControl) {
+            // Just update start point
+            routingControl.setWaypoints([
+                L.latLng(currentLat, currentLng),
+                L.latLng(destLat, destLng)
+            ]);
+        } else {
+            // Initialize Routing
+            routingControl = L.Routing.control({
+                waypoints: [
+                    L.latLng(currentLat, currentLng),
+                    L.latLng(destLat, destLng)
+                ],
+                router: L.Routing.osrmv1({
+                    serviceUrl: 'https://router.project-osrm.org/route/v1'
+                }),
+                lineOptions: {
+                    styles: [{ color: 'blue', opacity: 0.6, weight: 4 }]
+                },
+                createMarker: function () { return null; }, // Don't create default markers, we have our own
+                addWaypoints: false,
+                draggableWaypoints: false,
+                fitSelectedRoutes: true,
+                showAlternatives: false
+            }).addTo(map);
+        }
+    }
+
+    function completeOrder() {
+        // Simple redirect to dashboard to use the existing status update logic easier, 
+        // or we could implement the fetch call here.
+        // Let's redirect for now as it's safer.
+        alert("Navigating back to dashboard to confirm completion.");
+        window.location.href = "{{ url_for('rider_dashboard') }}";
+    }
+</script>
+{% endblock %}

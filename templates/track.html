@@ -182,17 +182,24 @@
         });
 
         socket.on('location_update', (data) => {
-            console.log("Rider moved:", data);
+            console.log("Rider moved (socket):", data);
+
+            // Visual Debug Indicator (Optional)
+            const statusBadge = document.querySelector('span[style*="background: #dcfce7"]');
+            if (statusBadge) {
+                const originalText = statusBadge.innerText;
+                statusBadge.innerText = "📍 Updating...";
+                setTimeout(() => statusBadge.innerText = originalText, 500);
+            }
 
             if (riderMarker) {
                 const newLat = parseFloat(data.lat);
                 const newLng = parseFloat(data.lng);
 
-                // Animate marker movement
-                riderMarker.setLatLng([newLat, newLng]);
-
-                // Optional: Update popup content if available
-                // riderMarker.getPopup().setContent(...)
+                if (!isNaN(newLat) && !isNaN(newLng)) {
+                    // Animate marker movement
+                    riderMarker.setLatLng([newLat, newLng]);
+                }
             }
         });
 
