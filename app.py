@@ -1000,15 +1000,18 @@ def rider_accept_order(order_id):
         rider_plate = 'Not Listed'
         rider_color = 'Green'
         
+        rider_phone = None # Added initialization
+        
         if client:
              try:
-                rider_res = client.table('riders').select('name, vehicle_type, plate_number, vehicle_color').eq('id', user_id).execute()
+                rider_res = client.table('riders').select('name, vehicle_type, plate_number, vehicle_color, phone').eq('id', user_id).execute()
                 if rider_res.data:
                     rd = rider_res.data[0]
                     rider_name = rd.get('name', 'Rider')
                     rider_vehicle = rd.get('vehicle_type', 'Motorbike')
                     rider_plate = rd.get('plate_number', 'Not Listed')
                     rider_color = rd.get('vehicle_color', 'Green')
+                    rider_phone = rd.get('phone')
              except:
                  # Local Rider Check
                  r = get_rider_local(user_id)

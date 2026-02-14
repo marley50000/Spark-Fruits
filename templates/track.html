@@ -8,6 +8,26 @@
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<!-- Leaflet Routing Machine -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+<style>
+    .rider-contact-btn {
+        padding: 0.75rem;
+        border-radius: 50%;
+        background: #dcfce7;
+        color: var(--primary-dark);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .rider-contact-btn[hidden] {
+        display: none !important;
+        /* Force override if needed */
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -50,6 +70,7 @@
                 <i data-lucide="user" style="color: grey;"></i>
             </div>
             <div style="text-align: left; flex: 1;">
+                {% if order.rider_name %}
                 <p style="font-weight: bold; margin-bottom: 0.25rem;">{{ order.rider_name }}</p>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">
                     {{ order.rider_vehicle or 'Motorbike' }} • {{ order.rider_plate or 'No Plate' }} • {{
@@ -59,14 +80,22 @@
                     <span style="color: #f59e0b;">★</span>
                     <span style="font-size: 0.9rem;">4.9</span>
                 </div>
+                {% else %}
+                <p style="font-weight: bold; margin-bottom: 0.25rem;">Finding your rider...</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">
+                    Please wait while we assign a courier.
+                </p>
+                {% endif %}
             </div>
-            <a id="rider-call-btn" href="{{ 'tel:' + order.rider_phone if order.rider_phone else '#' }}" class="btn"
-                style="padding: 0.75rem; border-radius: 50%; background: #dcfce7; color: var(--primary-dark); display: {{ 'flex' if order.rider_phone else 'none' }}; text-decoration: none;">
+            <a id="rider-call-btn" href="{{ 'tel:' + order.rider_phone if order.rider_phone else '#' }}"
+                class="btn rider-contact-btn" {% if not order.rider_phone %}hidden{% endif %}>
                 <i data-lucide="phone" style="width: 20px;"></i>
             </a>
         </div>
 
-        <p style="font-weight: bold; font-size: 1.2rem; color: var(--text-main);">ETA: {{ order.eta }}</p>
+        <p style="font-weight: bold; font-size: 1.2rem; color: var(--text-main);">ETA:
+            {{ order.eta if order.eta else 'Calculating...' }}
+        </p>
         <div style="height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 1rem; overflow: hidden;">
             <div style="height: 100%; width: 75%; background: var(--primary);"></div>
         </div>
@@ -91,9 +120,10 @@
         const orderLat = parseFloat(rawLat);
         const orderLng = parseFloat(rawLng);
 
-        // Validation - if invalid fall back to Accra default
-        const finalLat = isNaN(orderLat) ? 5.6037 : orderLat;
-        const finalLng = isNaN(orderLng) ? -0.1870 : orderLng;
+        // Validation - if invalid or 0,0, fall back to Accra default
+        // We treat (0,0) as invalid because it's in the ocean and often a default value
+        const finalLat = (!isNaN(orderLat) && Math.abs(orderLat) > 0.0001) ? orderLat : 5.6037;
+        const finalLng = (!isNaN(orderLng) && Math.abs(orderLng) > 0.0001) ? orderLng : -0.1870;
 
         // Rider Location Logic
         const serverRiderLat = "{{ order.rider_lat if order and order.rider_lat else '' }}";
@@ -102,8 +132,10 @@
         let riderLat = parseFloat(serverRiderLat);
         let riderLng = parseFloat(serverRiderLng);
 
-        // Fallback to mock offset if no real location data
-        if (isNaN(riderLat) || isNaN(riderLng)) {
+        // Fallback to mock offset if no real location data or 0,0
+        // Use epsilon check for float 0
+        if (isNaN(riderLat) || isNaN(riderLng) || (Math.abs(riderLat) < 0.0001 && Math.abs(riderLng) < 0.0001)) {
+            console.log("Invalid rider location (0,0 or missing), using fallback.");
             riderLat = finalLat + 0.005;
             riderLng = finalLng + 0.005;
         }
@@ -188,12 +220,54 @@
             .addTo(map)
             .bindPopup("<b>Destination</b><br>{{ order.location.address if order and order.location and order.location.address else 'Delivery Location' }}");
 
+        // Routing Control
+        let routingControl = null;
+
+        function updateRoute(startLat, startLng, endLat, endLng) {
+            if (!L.Routing) return;
+
+            const start = L.latLng(startLat, startLng);
+            const end = L.latLng(endLat, endLng);
+
+            if (routingControl) {
+                routingControl.setWaypoints([start, end]);
+            } else {
+                routingControl = L.Routing.control({
+                    waypoints: [start, end],
+                    lineOptions: {
+                        styles: [{ color: '#16a34a', opacity: 0.8, weight: 6 }]
+                    },
+                    createMarker: function () { return null; }, // Hide default markers
+                    addWaypoints: false,
+                    draggableWaypoints: false,
+                    fitSelectedRoutes: false,
+                    show: false, // Try to hide default container
+                    containerClassName: 'routing-hidden' // Custom class to hide
+                }).addTo(map);
+
+                // Hide the panel via CSS if show:false doesn't work
+                const container = document.querySelector('.leaflet-routing-container');
+                if (container) container.style.display = 'none';
+            }
+        }
+
+        // Simpler function to update route on move
+        function refreshRoute() {
+            if (riderMarker) {
+                const rPos = riderMarker.getLatLng();
+                updateRoute(rPos.lat, rPos.lng, finalLat, finalLng);
+            }
+        }
+
         // Fit bounds to show both
         const group = new L.featureGroup([
             riderMarker,
             L.marker([finalLat, finalLng])
         ]);
         map.fitBounds(group.getBounds().pad(0.2));
+
+        // Initial Route
+        refreshRoute();
 
         // Simulate Real-time Movement (Demo)
         // Real-time Tracking via Socket.IO
@@ -275,6 +349,7 @@
                 if (!isNaN(newLat) && !isNaN(newLng)) {
                     // Animate marker movement
                     riderMarker.setLatLng([newLat, newLng]);
+                    refreshRoute();
                 }
             }
         });

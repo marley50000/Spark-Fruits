@@ -119,7 +119,7 @@
             "email": "cust_1770673469@test.com",
             "plan_name": "Test Plan",
             "type": "Subscription",
-            "status": "Pending",
+            "status": "Rider Assigned",
             "phone": "0244444444",
             "total_price": 50.0,
             "location": {
@@ -130,7 +130,31 @@
             "cart_json": null,
             "payment_ref": null,
             "id": 1770673474,
-            "address_short": "Test Location, Accra"
+            "address_short": "Test Location, Accra",
+            "rider_id": "7e400375-4f8c-458a-844b-b5144e8a4385",
+            "rider": "Rider"
+        },
+        {
+            "customer": "Seyram Dzakpasu",
+            "email": "seyramsparkdzakpasu100@gmail.com",
+            "plan_name": "Test (x1)",
+            "type": "Order",
+            "status": "Rider Assigned",
+            "phone": "0551389510",
+            "total_price": 0.2,
+            "location": {
+                "address": "Kwakwranya Street, Adiembra, Adobetor",
+                "lat": "5.575266408841829",
+                "lng": "-0.15425927318013302"
+            },
+            "cart_json": "[{\"id\":10,\"title\":\"Test\",\"price\":0.2,\"description\":\"new trial\",\"qty\":1}]",
+            "payment_ref": "T114470766124294",
+            "id": 1771101328,
+            "plan": "Test (x1)",
+            "pressed": "Pending",
+            "address_short": "Kwakwranya Street, Adiembra, Adobetor",
+            "rider_id": "7e400375-4f8c-458a-844b-b5144e8a4385",
+            "rider": "Rider"
         }
     ]
 }
