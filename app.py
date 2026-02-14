@@ -478,9 +478,12 @@ def track():
             if order.get('rider_id'):
                 try:
                     client = supabase_admin if supabase_admin else supabase
-                    r_res = client.table('riders').select('name, vehicle_type').eq('id', order['rider_id']).execute()
+                    r_res = client.table('riders').select('name, vehicle_type, current_lat, current_lng').eq('id', order['rider_id']).execute()
                     if r_res.data:
-                        order['rider_name'] = r_res.data[0]['name']
+                        rider_data = r_res.data[0]
+                        order['rider_name'] = rider_data['name']
+                        order['rider_lat'] = rider_data.get('current_lat')
+                        order['rider_lng'] = rider_data.get('current_lng')
                 except: pass
 
     return render_template('track.html', title="Track Order", order=order, show_success=show_success)
@@ -525,6 +528,47 @@ def on_join(data):
     if order_id:
         join_room(str(order_id))
         print(f"Client joined room: {order_id}")
+
+@socketio.on('update_location')
+def on_location_update(data):
+    # Data: { rider_id, lat, lng, order_ids: [] }
+    rider_id = data.get('rider_id')
+    lat = data.get('lat')
+    lng = data.get('lng')
+    order_ids = data.get('order_ids', [])
+    
+    if not rider_id or not lat or not lng:
+        return
+
+    # Update Rider Location in DB
+    if supabase:
+        try:
+            client = supabase_admin if supabase_admin else supabase
+            client.table('riders').update({
+                'current_lat': lat, 
+                'current_lng': lng
+            }).eq('id', rider_id).execute()
+        except Exception as e:
+            print(f"Loc Update Error: {e}")
+            pass
+            
+    # Also update local DB for fallback
+    updated_local = False
+    for r in local_db['riders']:
+        if str(r.get('id')) == str(rider_id):
+            r['current_lat'] = lat
+            r['current_lng'] = lng
+            updated_local = True
+            break
+    if updated_local: save_local_db(local_db)
+    
+    # Emit to all active order rooms
+    for oid in order_ids:
+        socketio.emit('location_update', {
+            'rider_id': rider_id,
+            'lat': lat,
+            'lng': lng
+        }, room=str(oid))
 
 @app.route('/admin')
 def admin():

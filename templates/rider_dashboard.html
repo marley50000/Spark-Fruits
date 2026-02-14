@@ -227,9 +227,20 @@
 
     // Realtime Socket.IO
     const socket = io();
+    const riderId = "{{ session.get('user_id') }}";
+
+    // Get Active Order IDs for room updates
+    const activeOrderIds = [
+        {% for order in my_orders %}
+    {% if order.status in ['Rider Assigned', 'Picked Up', 'Arrived at Pickup', 'Arrived at Dropoff'] %}
+    "{{ order.id }}",
+        {% endif %}
+    {% endfor %}
+    ];
 
     socket.on('connect', () => {
         console.log("Connected to WebSocket");
+        startTracking();
     });
 
     socket.on('new_order', (order) => {
@@ -238,10 +249,6 @@
         if (!grid) return; // Tab might be hidden or empty state
 
         if (document.getElementById(`order-card-${order.id}`)) return;
-
-        // Play Sound (Optional)
-        // const audio = new Audio('/static/notification.mp3');
-        // audio.play();
 
         const card = document.createElement('div');
         card.className = 'card';
@@ -291,9 +298,49 @@
         }
     });
 
-    // Keep polling as fallback every 15s instead of 5s
-    setInterval(async () => {
-        // ... existing polling logic if needed, or remove ...
-    }, 15000); 
+    // Location Tracking Logic
+    let watchId = null;
+
+    function startTracking() {
+        if (!navigator.geolocation) {
+            console.log("Geolocation not supported");
+            return;
+        }
+
+        if (watchId) return; // Already watching
+
+        // Only track if we have active orders
+        if (activeOrderIds.length === 0) {
+            console.log("No active orders, stopping tracking");
+            return;
+        }
+
+        console.log("Starting location tracking for orders:", activeOrderIds);
+
+        watchId = navigator.geolocation.watchPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                // Emit update
+                socket.emit('update_location', {
+                    rider_id: riderId,
+                    lat: lat,
+                    lng: lng,
+                    order_ids: activeOrderIds
+                });
+
+                console.log(`Sent location: ${lat}, ${lng}`);
+            },
+            (error) => {
+                console.error("Location error:", error);
+            },
+            {
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 5000
+            }
+        );
+    }
 </script>
 {% endblock %}

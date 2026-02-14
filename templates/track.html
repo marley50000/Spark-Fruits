@@ -91,9 +91,18 @@
         const finalLat = isNaN(orderLat) ? 5.6037 : orderLat;
         const finalLng = isNaN(orderLng) ? -0.1870 : orderLng;
 
-        // Mock Rider Logic: Place rider slightly offset
-        let riderLat = finalLat + 0.005;
-        let riderLng = finalLng + 0.005;
+        // Rider Location Logic
+        const serverRiderLat = "{{ order.rider_lat if order and order.rider_lat else '' }}";
+        const serverRiderLng = "{{ order.rider_lng if order and order.rider_lng else '' }}";
+
+        let riderLat = parseFloat(serverRiderLat);
+        let riderLng = parseFloat(serverRiderLng);
+
+        // Fallback to mock offset if no real location data
+        if (isNaN(riderLat) || isNaN(riderLng)) {
+            riderLat = finalLat + 0.005;
+            riderLng = finalLng + 0.005;
+        }
 
         const map = L.map('map').setView([finalLat, finalLng], 13);
 
@@ -124,7 +133,7 @@
         // Add Markers
         const riderMarker = L.marker([riderLat, riderLng], { icon: riderIcon })
             .addTo(map)
-            .bindPopup("<b>Rider:</b> Kwame A.<br><i>On the way</i>")
+            .bindPopup("<b>Rider:</b> {{ order.rider_name if order and order.rider_name else 'Assigning...' }}<br><i>{{ order.status if order and order.status else 'On the way' }}</i>")
             .openPopup();
 
         L.marker([finalLat, finalLng], { icon: homeIcon })
@@ -170,6 +179,21 @@
 
             // Refresh map data (fallback to fetch for full details)
             refreshMap();
+        });
+
+        socket.on('location_update', (data) => {
+            console.log("Rider moved:", data);
+
+            if (riderMarker) {
+                const newLat = parseFloat(data.lat);
+                const newLng = parseFloat(data.lng);
+
+                // Animate marker movement
+                riderMarker.setLatLng([newLat, newLng]);
+
+                // Optional: Update popup content if available
+                // riderMarker.getPopup().setContent(...)
+            }
         });
 
         async function refreshMap() {
