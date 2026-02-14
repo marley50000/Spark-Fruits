@@ -50,16 +50,20 @@
                 <i data-lucide="user" style="color: grey;"></i>
             </div>
             <div style="text-align: left; flex: 1;">
-                <p style="font-weight: bold; margin-bottom: 0.25rem;">{{ order.rider }}</p>
+                <p style="font-weight: bold; margin-bottom: 0.25rem;">{{ order.rider_name }}</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">
+                    {{ order.rider_vehicle or 'Motorbike' }} • {{ order.rider_plate or 'No Plate' }} • {{
+                    order.rider_color or 'Green' }}
+                </p>
                 <div style="display: flex; align-items: center; gap: 0.25rem;">
                     <span style="color: #f59e0b;">★</span>
                     <span style="font-size: 0.9rem;">4.9</span>
                 </div>
             </div>
-            <button class="btn"
-                style="padding: 0.75rem; border-radius: 50%; background: #dcfce7; color: var(--primary-dark);">
+            <a id="rider-call-btn" href="{{ 'tel:' + order.rider_phone if order.rider_phone else '#' }}" class="btn"
+                style="padding: 0.75rem; border-radius: 50%; background: #dcfce7; color: var(--primary-dark); display: {{ 'flex' if order.rider_phone else 'none' }}; text-decoration: none;">
                 <i data-lucide="phone" style="width: 20px;"></i>
-            </button>
+            </a>
         </div>
 
         <p style="font-weight: bold; font-size: 1.2rem; color: var(--text-main);">ETA: {{ order.eta }}</p>
@@ -111,15 +115,55 @@
             attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        // Icons
-        const riderIcon = L.icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-        });
+        function createRiderIcon(type, color) {
+            let iconName = 'bike';
+            if (type && type.toLowerCase().includes('car')) iconName = 'car';
+            if (type && type.toLowerCase().includes('van')) iconName = 'truck';
+            if (type && type.toLowerCase().includes('bicycle')) iconName = 'bike';
+
+            // Sanitize color
+            if (!color || color === 'None') color = '#16a34a';
+
+            let svg = '';
+            // Try to verify valid color by setting a temp element? No, too complex.
+            // Just rely on browser parsing.
+
+            if (window.lucide && window.lucide.icons) {
+                // Lucide uses PascalCase keys (e.g. 'Car', 'Bike')
+                const pascalName = iconName.charAt(0).toUpperCase() + iconName.slice(1);
+                const iconNode = window.lucide.icons[pascalName] || window.lucide.icons[iconName];
+
+                if (iconNode) {
+                    svg = iconNode.toSvg({
+                        color: color,
+                        'stroke-width': 2,
+                        width: 24,
+                        height: 24
+                    });
+                } else {
+                    svg = '🏍️';
+                }
+            } else {
+                svg = '🏍️';
+            }
+
+            const html = `<div style="background: white; border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 2px solid ${color};">
+            ${svg}
+        </div>`;
+
+            return L.divIcon({
+                html: html,
+                className: '',
+                iconSize: [40, 40],
+                iconAnchor: [20, 20],
+                popupAnchor: [0, -20]
+            });
+        }
+
+        let riderIcon = createRiderIcon(
+            "{{ order.rider_vehicle if order and order.rider_vehicle else 'Motorbike' }}",
+            "{{ order.rider_color if order and order.rider_color else '#16a34a' }}"
+        );
 
         const homeIcon = L.icon({
             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
@@ -130,10 +174,14 @@
             shadowSize: [41, 41]
         });
 
-        // Add Markers
         const riderMarker = L.marker([riderLat, riderLng], { icon: riderIcon })
             .addTo(map)
-            .bindPopup("<b>Rider:</b> {{ order.rider_name if order and order.rider_name else 'Assigning...' }}<br><i>{{ order.status if order and order.status else 'On the way' }}</i>")
+            .bindPopup(`
+                <b>Rider:</b> {{ order.rider_name if order and order.rider_name else 'Assigning...' }}<br>
+                <b>Vehicle:</b> {{ order.rider_vehicle if order and order.rider_vehicle else 'Motorbike' }}<br>
+                <b>Plate:</b> {{ order.rider_plate if order and order.rider_plate else 'Not Listed' }}<br>
+                <i>{{ order.status if order and order.status else 'On the way' }}</i>
+            `)
             .openPopup();
 
         L.marker([finalLat, finalLng], { icon: homeIcon })
@@ -165,7 +213,35 @@
             // Update Rider Info if assigned
             if (data.rider) {
                 const riderNameEl = document.querySelector('p[style*="font-weight: bold; margin-bottom: 0.25rem;"]');
-                if (riderNameEl) riderNameEl.innerText = data.rider;
+                if (riderNameEl) {
+                    riderNameEl.innerText = data.rider;
+
+                    // Update Vehicle/Plate if available (assuming it's the next sibling p tag)
+                    if (data.vehicle || data.plate) {
+                        const infoEl = riderNameEl.nextElementSibling;
+                        if (infoEl && infoEl.tagName === 'P') {
+                            const vehicle = data.vehicle || 'Motorbike';
+                            const plate = data.plate || 'No Plate';
+                            const color = data.color || 'Green';
+                            infoEl.innerText = `${vehicle} • ${plate} • ${color}`;
+
+                            // Update Map Icon
+                            const newIcon = createRiderIcon(vehicle, color);
+                            if (riderMarker) {
+                                riderMarker.setIcon(newIcon);
+                            }
+                        }
+                    }
+
+                    // Update Phone
+                    if (data.phone) {
+                        const callBtn = document.getElementById('rider-call-btn');
+                        if (callBtn) {
+                            callBtn.href = `tel:${data.phone}`;
+                            callBtn.style.display = 'flex';
+                        }
+                    }
+                }
             }
 
             // Update Progress Bar (Simple Logic)
@@ -212,7 +288,31 @@
                     const newLat = parseFloat(data.rider.lat);
                     const newLng = parseFloat(data.rider.lng);
                     riderMarker.setLatLng([newLat, newLng]);
-                    riderMarker.getPopup().setContent(`<b>Rider:</b> ${data.rider.name}<br><i>${data.status}</i>`);
+
+                    // Update Popup
+                    const vehicle = data.rider.vehicle || 'Motorbike';
+                    const plate = data.rider.plate || 'No Plate';
+                    const color = data.rider.color || 'Green';
+
+                    riderMarker.getPopup().setContent(`
+                        <b>Rider:</b> ${data.rider.name}<br>
+                        <b>Vehicle:</b> ${vehicle}<br>
+                        <b>Plate:</b> ${plate}<br>
+                        <i>${data.status}</i>
+                    `);
+
+                    // Update Icon if needed (optional)
+                    const newIcon = createRiderIcon(vehicle, color);
+                    riderMarker.setIcon(newIcon);
+
+                    // Update Phone
+                    if (data.rider.phone) {
+                        const callBtn = document.getElementById('rider-call-btn');
+                        if (callBtn) {
+                            callBtn.href = `tel:${data.rider.phone}`;
+                            callBtn.style.display = 'flex';
+                        }
+                    }
                 }
             } catch (e) {
                 console.error("Tracking Error:", e);

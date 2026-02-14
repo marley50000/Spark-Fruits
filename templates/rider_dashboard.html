@@ -74,7 +74,9 @@
                     <div>
                         <p><strong>Pickup:</strong> East Legon Head Office</p>
                         <p><strong>Dropoff:</strong> {{ order.location.address }}</p>
-                        <p><strong>Phone:</strong> <a href="tel:{{ order.phone }}">{{ order.phone }}</a></p>
+                        <p><strong>Phone:</strong> <a href="tel:{{ order.phone }}" class="btn"
+                                style="padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.5rem; background: #dcfce7; color: var(--primary-dark); text-decoration: none; border-radius: 0.25rem;"><i
+                                    data-lucide="phone" style="width: 14px;"></i> {{ order.phone }}</a></p>
                     </div>
                     <div style="text-align: right;">
                         <p style="font-size: 1.5rem; font-weight: bold;">GH₵ {{ order.total_price }}</p>

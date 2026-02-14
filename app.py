@@ -478,10 +478,14 @@ def track():
             if order.get('rider_id'):
                 try:
                     client = supabase_admin if supabase_admin else supabase
-                    r_res = client.table('riders').select('name, vehicle_type, current_lat, current_lng').eq('id', order['rider_id']).execute()
+                    r_res = client.table('riders').select('name, vehicle_type, current_lat, current_lng, plate_number, vehicle_color, phone').eq('id', order['rider_id']).execute()
                     if r_res.data:
                         rider_data = r_res.data[0]
                         order['rider_name'] = rider_data['name']
+                        order['rider_vehicle'] = rider_data.get('vehicle_type', 'Motorbike')
+                        order['rider_plate'] = rider_data.get('plate_number', 'Not Listed')
+                        order['rider_color'] = rider_data.get('vehicle_color', 'Green')
+                        order['rider_phone'] = rider_data.get('phone') # Added
                         order['rider_lat'] = rider_data.get('current_lat')
                         order['rider_lng'] = rider_data.get('current_lng')
                 except: pass
@@ -747,6 +751,8 @@ def rider_signup():
         name = request.form['name']
         phone = request.form['phone']
         vehicle = request.form['vehicle']
+        plate_number = request.form.get('plate_number', 'Not Provided')
+        vehicle_color = request.form.get('vehicle_color', 'Green')
         
         user_obj = None
         
@@ -818,6 +824,8 @@ def rider_signup():
                     'name': name,
                     'phone': phone,
                     'vehicle_type': vehicle,
+                    'plate_number': plate_number, # Added field
+                    'vehicle_color': vehicle_color,
                     'status': 'available'
                 }
                 
@@ -986,16 +994,30 @@ def rider_accept_order(order_id):
         try: oid = int(order_id)
         except: oid = order_id
         
-        # Get rider name
+        # Get rider details
         rider_name = 'Rider'
+        rider_vehicle = 'Motorbike'
+        rider_plate = 'Not Listed'
+        rider_color = 'Green'
+        
         if client:
              try:
-                rider_res = client.table('riders').select('name').eq('id', user_id).execute()
-                rider_name = rider_res.data[0]['name'] if rider_res.data else 'Rider'
+                rider_res = client.table('riders').select('name, vehicle_type, plate_number, vehicle_color').eq('id', user_id).execute()
+                if rider_res.data:
+                    rd = rider_res.data[0]
+                    rider_name = rd.get('name', 'Rider')
+                    rider_vehicle = rd.get('vehicle_type', 'Motorbike')
+                    rider_plate = rd.get('plate_number', 'Not Listed')
+                    rider_color = rd.get('vehicle_color', 'Green')
              except:
                  # Local Rider Check
                  r = get_rider_local(user_id)
-                 if r: rider_name = r.get('name', 'Rider')
+                 if r: 
+                     rider_name = r.get('name', 'Rider')
+                     rider_vehicle = r.get('vehicle_type', 'Motorbike')
+                     rider_plate = r.get('plate_number', 'Not Listed')
+                     rider_color = r.get('vehicle_color', 'Green')
+                     rider_phone = r.get('phone')
 
         update_payload = {
             'rider_id': user_id,
@@ -1016,7 +1038,14 @@ def rider_accept_order(order_id):
             success = True
 
         socketio.emit('order_taken', {'id': oid, 'rider_id': user_id})
-        socketio.emit('status_update', {'status': 'Rider Assigned', 'rider': rider_name}, room=str(oid))
+        socketio.emit('status_update', {
+            'status': 'Rider Assigned', 
+            'rider': rider_name,
+            'vehicle': rider_vehicle,
+            'plate': rider_plate,
+            'color': rider_color,
+            'phone': rider_phone
+        }, room=str(oid))
         
         return jsonify({'success': True})
     except Exception as e:
@@ -1182,6 +1211,10 @@ def track_order_api(order_id):
             'eta': order.get('eta', 'Calculating...'),
             'rider': {
                 'name': rider.get('name') if rider else 'Assigning...',
+                'vehicle_type': rider.get('vehicle_type', 'Motorbike'), # Ensure consistent key if needed, or stick to 'vehicle'
+                'vehicle': rider.get('vehicle_type', 'Motorbike'),
+                'plate': rider.get('plate_number', 'Not Listed'),
+                'color': rider.get('vehicle_color', 'Green'),
                 'lat': rider.get('current_lat'),
                 'lng': rider.get('current_lng'),
                 'phone': rider.get('phone')

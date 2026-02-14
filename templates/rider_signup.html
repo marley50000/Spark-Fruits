@@ -20,37 +20,84 @@
 
             <div>
                 <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Email Address</label>
-                <input type="email" name="email" placeholder="rider@dailyfresh.com" value="{{ prefill_email }}"
-                    required>
+                {% if prefill_email %}
+                <input type="email" name="email" value="{{ prefill_email }}" readonly
+                    style="background-color: #e5e7eb; color: #6b7280; cursor: not-allowed; border: 1px solid var(--border-color);">
+                <small style="color: var(--text-muted);">You are applying with your logged-in account.</small>
+                {% else %}
+                <input type="email" name="email" placeholder="rider@dailyfresh.com" required>
+                {% endif %}
             </div>
 
+            {% if not prefill_email %}
             <div>
                 <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Password</label>
                 <input type="password" name="password" placeholder="••••••••" required>
             </div>
+            {% endif %}
 
             <div>
                 <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Phone Number</label>
                 <input type="tel" name="phone" placeholder="055 123 4567" required>
             </div>
 
-            <div>
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Vehicle Type</label>
-                <select name="vehicle" required
-                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem;">
-                    <option value="Motorbike">Motorbike</option>
-                    <option value="Bicycle">Bicycle</option>
-                    <option value="Car">Car</option>
-                    <option value="Van">Van</option>
-                </select>
+            <!-- Vehicle Details Section -->
+            <div
+                style="background: var(--background-alt); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+                <h3
+                    style="font-size: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                    <i data-lucide="truck"
+                        style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i> Vehicle
+                    Details
+                </h3>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Type</label>
+                    <select name="vehicle" required
+                        style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem;">
+                        <option value="Motorbike">Motorbike 🏍️</option>
+                        <option value="Bicycle">Bicycle 🚲</option>
+                        <option value="Car">Car 🚗</option>
+                        <option value="Van">Van 🚐</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Plate Number</label>
+                    <input type="text" name="plate_number" placeholder="GT-1234-24" required
+                        style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem;">
+                </div>
+
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Vehicle Color</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" name="vehicle_color" list="colors" placeholder="e.g. Red, Blue, Black"
+                            required
+                            style="flex: 1; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem;">
+                        <input type="color" id="color-picker"
+                            onchange="document.getElementsByName('vehicle_color')[0].value = this.value"
+                            style="width: 50px; height: 100%; padding: 0; border: none; cursor: pointer;">
+                    </div>
+                    <datalist id="colors">
+                        <option value="Red">
+                        <option value="Blue">
+                        <option value="Black">
+                        <option value="White">
+                        <option value="Silver">
+                        <option value="Green">
+                        <option value="Yellow">
+                    </datalist>
+                </div>
             </div>
 
             <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Apply as Rider</button>
         </form>
 
+        {% if not prefill_email %}
         <p style="text-align: center; margin-top: 1.5rem; color: var(--text-muted);">
             Already have an account? <a href="/login" style="color: var(--primary); text-decoration: none;">Log In</a>
         </p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
